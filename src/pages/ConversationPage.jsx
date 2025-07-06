@@ -1,14 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 import { withRouter } from "react-router-dom";
+import { useSocket } from "../contexts/ConversationContext";
 
-const ConversationPage = ({ match, socket }) => {
+const ConversationPage = ({ match }) => {
   const { id: conversationId } = match.params;
   const [messages, setMessages] = useState([]);
   const messageRef = useRef();
   const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
 
-  const sendMessage = () => {};
+  const { socket } = useSocket(); // Get socket from context
+
+  const sendMessage = () => {
+    const message = messageRef.current.value;
+    if (message.trim() && socket) {
+      socket.emit("send-message", {
+        conversationId,
+        message,
+        userId,
+        email,
+      });
+      messageRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -19,28 +33,52 @@ const ConversationPage = ({ match, socket }) => {
       setUserId(userId);
       setEmail(email);
     }
+
     if (socket) {
       socket.emit("create-conversation", { conversationId });
-      socket.on("conversation-created", (data) => {
+
+      const handleConversationCreated = (data) => {
         console.log("Conversation created:", data);
-      });
+      };
+
+      socket.on("conversation-created", handleConversationCreated);
+
+      return () => {
+        socket.off("conversation-created", handleConversationCreated);
+      };
     }
-  }, []);
+  }, [conversationId, socket]);
 
   useEffect(() => {
     if (socket) {
       socket.emit("join-conversation", { conversationId, userId, email });
-      socket.on("get-users", ({ conversationId, users }) => {
+
+      const handleGetUsers = ({ conversationId, users }) => {
         console.log(
           `Users in conversation ${conversationId}:`,
           JSON.stringify(users, null, 2)
         );
-      });
-      socket.on("conversation-joined", ({ conversationId }) => {
+      };
+
+      const handleConversationJoined = ({ conversationId }) => {
         console.log(`User joined conversation ${conversationId}`);
-      });
+      };
+
+      const handleNewMessage = (messageData) => {
+        setMessages((prevMessages) => [...prevMessages, messageData]);
+      };
+
+      socket.on("get-users", handleGetUsers);
+      socket.on("conversation-joined", handleConversationJoined);
+      socket.on("new-message", handleNewMessage);
+
+      return () => {
+        socket.off("get-users", handleGetUsers);
+        socket.off("conversation-joined", handleConversationJoined);
+        socket.off("new-message", handleNewMessage);
+      };
     }
-  }, [userId, email]);
+  }, [userId, email, conversationId, socket]);
 
   return (
     <div className="chatroomPage">

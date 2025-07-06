@@ -1,12 +1,14 @@
 import { createRef } from "react";
 import { withRouter } from "react-router-dom";
 import axios from "axios";
+import { useSocket } from "../contexts/ConversationContext";
 
 import makeToast from "../Toaster";
 
 const LoginPage = (props) => {
   const emailRef = createRef();
   const passwordRef = createRef();
+  const { authenticate } = useSocket();
 
   const handleLogin = async () => {
     const email = emailRef.current.value;
@@ -28,8 +30,8 @@ const LoginPage = (props) => {
       if (response.status === 200) {
         makeToast("success", "Login successful!");
         localStorage.setItem("authToken", response.data.token);
+        authenticate(); // This will trigger socket connection
         props.history.push("/dashboard");
-        props.setupSocket(); // Ensure socket is set up after login
       } else {
         makeToast("error", response.data.message);
       }
