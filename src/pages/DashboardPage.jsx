@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../contexts/ConversationContext";
 
 import makeToast from "../Toaster";
@@ -9,9 +9,10 @@ const DashboardPage = () => {
   const [conversations, setConversations] = useState([]);
   const { logout } = useSocket();
 
+  const navigate = useNavigate();
   const handleLogout = () => {
     logout();
-    window.location.href = "/login";
+    navigate("/login");
   };
   const getConversations = async () => {
     try {
