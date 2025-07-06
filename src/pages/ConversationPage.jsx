@@ -6,10 +6,19 @@ const ConversationPage = ({ match, socket }) => {
   const [messages, setMessages] = useState([]);
   const messageRef = useRef();
   const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
 
   const sendMessage = () => {};
 
   useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      console.log("Payload:", JSON.stringify(payload, null, 2));
+      const { userId, email } = payload;
+      setUserId(userId);
+      setEmail(email);
+    }
     if (socket) {
       socket.emit("create-conversation", { conversationId });
       socket.on("conversation-created", (data) => {
@@ -17,6 +26,21 @@ const ConversationPage = ({ match, socket }) => {
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.emit("join-conversation", { conversationId, userId, email });
+      socket.on("get-users", ({ conversationId, users }) => {
+        console.log(
+          `Users in conversation ${conversationId}:`,
+          JSON.stringify(users, null, 2)
+        );
+      });
+      socket.on("conversation-joined", ({ conversationId }) => {
+        console.log(`User joined conversation ${conversationId}`);
+      });
+    }
+  }, [userId, email]);
 
   return (
     <div className="chatroomPage">
