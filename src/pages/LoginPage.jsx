@@ -28,7 +28,8 @@ const LoginPage = (props) => {
       if (response.status === 200) {
         makeToast("success", "Login successful!");
         localStorage.setItem("authToken", response.data.token);
-        props.history.push("/");
+        props.history.push("/dashboard");
+        props.setupSocket(); // Ensure socket is set up after login
       } else {
         makeToast("error", response.data.message);
       }
