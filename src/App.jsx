@@ -4,6 +4,8 @@ import { io } from "socket.io-client";
 
 import IndexPage from "./pages/IndexPage";
 import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
+import ConversationPage from "./pages/ConversationPage";
 import makeToast from "./Toaster";
 
 import "./App.css";
@@ -43,7 +45,20 @@ function App() {
     <Router>
       <Switch>
         <Route path="/" component={IndexPage} exact />
-        <Route path="/login" render={() => <LoginPage />} />
+        <Route
+          path="/login"
+          render={() => <LoginPage setupSocket={setupSocket} />}
+        />
+        <Route
+          path="/dashboard"
+          render={() => <DashboardPage socket={socket} />}
+          exact
+        />
+        <Route
+          path="/conversations/:id"
+          render={() => <ConversationPage socket={socket} />}
+          exact
+        />
       </Switch>
     </Router>
   );
