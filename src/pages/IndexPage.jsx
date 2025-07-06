@@ -9,9 +9,12 @@ const IndexPage = (props) => {
     if (token) {
       // User is authenticated, fetch chat messages
       console.log("User is authenticated, fetching chat messages...");
+      props.history.push("/dashboard");
+      return;
     } else {
-      // User is not authenticated, redirect to login
       console.log("User is not authenticated, redirecting to login...");
+      props.history.push("/login");
+      return;
     }
   }, []);
 
